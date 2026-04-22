@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>先輩とつながる</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <section id="home-screen" class="screen active">
+        <h1>先輩とつながる</h1>
+        <p class="subtitle">話してみたい先輩を、気軽に見つけよう。</p>
+        <button id="start-btn" class="btn primary">はじめる</button>
+      </section>
+
+      <section id="card-screen" class="screen">
+        <header class="top-bar">
+          <h2>プロフィールカード</h2>
+          <button id="show-hearts-btn" class="btn ghost">ハート確認</button>
+        </header>
+
+        <article id="profile-card" class="profile-card" aria-live="polite"></article>
+
+        <div id="card-actions" class="actions">
+          <button id="skip-btn" class="btn skip" type="button">スキップ</button>
+          <button id="heart-btn" class="btn heart" type="button">興味あり ❤</button>
+        </div>
+        <p id="feedback" class="feedback" role="status"></p>
+      </section>
+
+      <section id="hearts-screen" class="screen">
+        <header class="top-bar">
+          <h2>ハート確認</h2>
+          <button id="back-to-cards-btn" class="btn ghost">カードに戻る</button>
+        </header>
+
+        <div class="hearts-grid">
+          <section>
+            <h3>自分が送ったハート</h3>
+            <ul id="sent-hearts-list" class="heart-list"></ul>
+          </section>
+          <section>
+            <h3>自分に届いたハート</h3>
+            <ul id="received-hearts-list" class="heart-list"></ul>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js" type="module"></script>
+  </body>
+</html>

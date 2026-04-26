@@ -293,6 +293,12 @@ p {
   color: #54766b;
 }
 
+.person-tags {
+  margin-top: 3px;
+  font-size: 0.8rem;
+  color: #2f8b67;
+}
+
 .empty {
   color: var(--muted);
 }

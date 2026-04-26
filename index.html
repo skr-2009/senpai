@@ -17,13 +17,19 @@
       <section id="card-screen" class="screen">
         <header class="top-bar">
           <h2>プロフィールカード</h2>
-          <button id="show-hearts-btn" class="btn ghost">ハート確認</button>
+          <div class="top-actions">
+            <button id="notifications-btn" class="btn ghost" type="button">
+              お知らせ
+              <span id="notif-badge" class="notif-badge">0</span>
+            </button>
+            <button id="show-hearts-btn" class="btn ghost">ハート確認</button>
+          </div>
         </header>
 
         <article id="profile-card" class="profile-card" aria-live="polite"></article>
 
         <div id="card-actions" class="actions">
-          <button id="skip-btn" class="btn skip" type="button">スキップ</button>
+          <button id="skip-btn" class="btn skip" type="button">また今度</button>
           <button id="heart-btn" class="btn heart" type="button">興味あり ❤</button>
         </div>
         <p id="feedback" class="feedback" role="status"></p>
@@ -47,6 +53,8 @@
         </div>
       </section>
     </main>
+
+    <div id="notification-toast" class="notification-toast" role="status" aria-live="polite"></div>
 
     <script src="app.js" type="module"></script>
   </body>

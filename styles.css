@@ -96,17 +96,79 @@ p {
   margin-bottom: 16px;
 }
 
+.top-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.notif-badge {
+  display: none;
+  margin-left: 6px;
+  min-width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 999px;
+  background: #ff4a72;
+  color: #fff;
+  font-size: 0.75rem;
+  line-height: 1.3rem;
+  padding: 0 0.3rem;
+  font-weight: 700;
+}
+
+.notif-badge.show {
+  display: inline-block;
+}
+
 .profile-card {
+  position: relative;
   background: var(--card);
   border-radius: var(--radius);
   overflow: hidden;
   box-shadow: 0 12px 30px rgba(48, 64, 140, 0.12);
+  transition: transform 0.22s ease, opacity 0.18s ease;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.profile-card.no-transition {
+  transition: none;
 }
 
 .profile-photo {
   width: 100%;
   height: 320px;
   object-fit: cover;
+}
+
+.swipe-label {
+  position: absolute;
+  top: 18px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 700;
+  color: #fff;
+  z-index: 2;
+  opacity: 0;
+  transform: scale(0.95);
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+.swipe-like {
+  right: 18px;
+  background: rgba(255, 95, 143, 0.92);
+}
+
+.swipe-skip {
+  left: 18px;
+  background: rgba(94, 109, 184, 0.9);
+}
+
+.profile-card[data-swipe="right"] .swipe-like,
+.profile-card[data-swipe="left"] .swipe-skip {
+  opacity: var(--swipe-opacity, 0);
+  transform: scale(1);
 }
 
 .card-body {
@@ -202,4 +264,24 @@ p {
   color: var(--muted);
   list-style: none;
   margin-left: -20px;
+}
+
+.notification-toast {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%) translateY(140%);
+  background: #232843;
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  z-index: 20;
+}
+
+.notification-toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
 }

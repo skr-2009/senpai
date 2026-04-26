@@ -53,9 +53,7 @@ function getReceivedStudents() {
 }
 
 function showToast(message) {
-  if (!message) {
-    return;
-  }
+  if (!message) return;
 
   if (toastTimerId) {
     window.clearTimeout(toastTimerId);
@@ -70,7 +68,9 @@ function showToast(message) {
 }
 
 function updateNotificationState({ showToastOnIncrease = false } = {}) {
-  const unreadStudents = getReceivedStudents().filter((student) => !readReceivedIds.has(student.id));
+  const unreadStudents = getReceivedStudents().filter(
+    (student) => !readReceivedIds.has(student.id)
+  );
   const unreadCount = unreadStudents.length;
 
   notifBadge.textContent = String(unreadCount);
@@ -85,7 +85,9 @@ function updateNotificationState({ showToastOnIncrease = false } = {}) {
 }
 
 function markReceivedAsRead() {
-  getReceivedStudents().forEach((student) => readReceivedIds.add(student.id));
+  getReceivedStudents().forEach((student) =>
+    readReceivedIds.add(student.id)
+  );
   updateNotificationState();
 }
 
@@ -94,13 +96,7 @@ function applyCardDragStyle(deltaX) {
   profileCard.style.transform = `translateX(${deltaX}px) rotate(${rotation}deg)`;
 
   const opacity = Math.min(Math.abs(deltaX) / SWIPE_THRESHOLD, 1);
-  if (deltaX > 0) {
-    profileCard.dataset.swipe = "right";
-  } else if (deltaX < 0) {
-    profileCard.dataset.swipe = "left";
-  } else {
-    profileCard.dataset.swipe = "none";
-  }
+  profileCard.dataset.swipe = deltaX > 0 ? "right" : deltaX < 0 ? "left" : "none";
   profileCard.style.setProperty("--swipe-opacity", opacity.toFixed(2));
 }
 
@@ -129,6 +125,7 @@ function renderCard() {
 
   heartBtn.disabled = false;
   skipBtn.disabled = false;
+
   profileCard.innerHTML = `
     <div class="swipe-label swipe-like">興味あり ❤</div>
     <div class="swipe-label swipe-skip">また今度</div>
@@ -142,7 +139,7 @@ function renderCard() {
       <p class="intro">${escapeHtml(student.intro)}</p>
       <p class="bio">${escapeHtml(student.bio)}</p>
       <div class="tags">
-        ${student.hashtags.map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}
+        ${student.hashtags.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}
       </div>
     </div>
   `;
@@ -172,22 +169,16 @@ function handleSkip() {
 
 function handleHeart() {
   const student = students[currentIndex];
-  if (!student) {
-    return;
-  }
+  if (!student) return;
 
-  if (!sendHeart(student)) {
-    return;
-  }
+  if (!sendHeart(student)) return;
 
   moveNextCard();
 }
 
 function handleSwipeAction(direction) {
   const student = students[currentIndex];
-  if (!student) {
-    return;
-  }
+  if (!student) return;
 
   if (direction === "right") {
     if (!sendHeart(student)) {
@@ -200,54 +191,13 @@ function handleSwipeAction(direction) {
     feedback.textContent = "また今度にしました";
   }
 
-  profileCard.classList.remove("no-transition");
-  profileCard.style.transform = `translateX(${direction === "right" ? 700 : -700}px) rotate(${direction === "right" ? 20 : -20}deg)`;
+  profileCard.style.transform = `translateX(${direction === "right" ? 700 : -700}px)`;
   profileCard.style.opacity = "0";
 
-  window.setTimeout(() => {
+  setTimeout(() => {
     profileCard.style.opacity = "1";
     moveNextCard();
   }, 180);
-}
-
-function onPointerDown(event) {
-  if (!students[currentIndex]) {
-    return;
-  }
-
-  swipeState.active = true;
-  swipeState.startX = event.clientX;
-  swipeState.deltaX = 0;
-  profileCard.classList.add("no-transition");
-  profileCard.setPointerCapture(event.pointerId);
-}
-
-function onPointerMove(event) {
-  if (!swipeState.active) {
-    return;
-  }
-
-  swipeState.deltaX = event.clientX - swipeState.startX;
-  applyCardDragStyle(swipeState.deltaX);
-}
-
-function onPointerEnd(event) {
-  if (!swipeState.active) {
-    return;
-  }
-
-  swipeState.active = false;
-  profileCard.releasePointerCapture(event.pointerId);
-  const deltaX = swipeState.deltaX;
-  swipeState.deltaX = 0;
-
-  if (Math.abs(deltaX) >= SWIPE_THRESHOLD) {
-    handleSwipeAction(deltaX > 0 ? "right" : "left");
-    return;
-  }
-
-  profileCard.classList.remove("no-transition");
-  resetCardDragStyle(true);
 }
 
 function createListItems(listElement, items, formatter) {
@@ -260,7 +210,7 @@ function createListItems(listElement, items, formatter) {
     return;
   }
 
-  items.forEach((item) => {
+  items.forEach(item => {
     const li = document.createElement("li");
     li.textContent = formatter(item);
     listElement.appendChild(li);
@@ -268,45 +218,14 @@ function createListItems(listElement, items, formatter) {
 }
 
 function renderHeartLists() {
-  const sentStudents = students.filter((student) => sentHeartIds.has(student.id));
-  createListItems(sentHeartsList, sentStudents, (student) => `${student.name} (${student.nickname})`);
+  const sentStudents = students.filter(student => sentHeartIds.has(student.id));
+  createListItems(sentHeartsList, sentStudents, student => `${student.name} (${student.nickname})`);
 
   createListItems(
     receivedHeartsList,
     getReceivedStudents(),
-    (student) => `${student.name}さんがあなたに興味を持っています`
+    student => `${student.name}さんがあなたに興味を持っています`
   );
-}
-
-async function refreshReceivedHearts() {
-  try {
-    const response = await fetch(`./data/students.json?ts=${Date.now()}`);
-    const data = await response.json();
-    const receivedById = new Set(
-      data.students
-        .filter((student) => student.receivedFrom.includes(currentUser.id))
-        .map((student) => student.id)
-    );
-
-    students = students.map((student) => {
-      if (receivedById.has(student.id) && !student.receivedFrom.includes(currentUser.id)) {
-        return {
-          ...student,
-          receivedFrom: [...student.receivedFrom, currentUser.id]
-        };
-      }
-      return student;
-    });
-
-    renderHeartLists();
-    updateNotificationState({ showToastOnIncrease: true });
-  } catch {
-    // polling failure is ignored intentionally in this prototype
-  }
-}
-
-function startReceivePolling() {
-  window.setInterval(refreshReceivedHearts, RECEIVE_POLLING_MS);
 }
 
 async function init() {
@@ -318,15 +237,9 @@ async function init() {
   renderCard();
   renderHeartLists();
   updateNotificationState({ showToastOnIncrease: true });
-  startReceivePolling();
 }
 
 startBtn.addEventListener("click", () => showScreen("card"));
-notificationsBtn.addEventListener("click", () => {
-  renderHeartLists();
-  showScreen("hearts");
-  markReceivedAsRead();
-});
 showHeartsBtn.addEventListener("click", () => {
   renderHeartLists();
   showScreen("hearts");
@@ -336,16 +249,4 @@ backToCardsBtn.addEventListener("click", () => showScreen("card"));
 heartBtn.addEventListener("click", handleHeart);
 skipBtn.addEventListener("click", handleSkip);
 
-profileCard.addEventListener("pointerdown", onPointerDown);
-profileCard.addEventListener("pointermove", onPointerMove);
-profileCard.addEventListener("pointerup", onPointerEnd);
-profileCard.addEventListener("pointercancel", onPointerEnd);
-
-init().catch((error) => {
-  profileCard.innerHTML = `
-    <div class="card-body">
-      <h3>データ読み込みエラー</h3>
-      <p class="bio">${escapeHtml(error.message)}</p>
-    </div>
-  `;
-});
+init();

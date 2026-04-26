@@ -1,0 +1,318 @@
+:root {
+  --bg: #f2fcf8;
+  --card: #ffffff;
+  --text: #1f3a31;
+  --muted: #608176;
+  --primary: #2eaf7d;
+  --primary-dark: #239469;
+  --heart: #2ec27e;
+  --skip: #d7ece4;
+  --radius: 18px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+  color: var(--text);
+  background: radial-gradient(circle at top, #e8f8f1 0%, var(--bg) 45%, #fbfffd 100%);
+  min-height: 100vh;
+}
+
+.app {
+  width: min(760px, 100%);
+  margin: 0 auto;
+  padding: 32px 16px 48px;
+}
+
+.screen {
+  display: none;
+}
+
+.screen.active {
+  display: block;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+#home-screen {
+  background: var(--card);
+  padding: 52px 24px;
+  border-radius: var(--radius);
+  text-align: center;
+  box-shadow: 0 12px 30px rgba(20, 101, 72, 0.12);
+}
+
+.subtitle {
+  margin: 14px 0 28px;
+  color: var(--muted);
+}
+
+.btn {
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 18px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.2s ease, background 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn.primary {
+  background: var(--primary);
+  color: #fff;
+  padding-inline: 28px;
+}
+
+.btn.primary:hover {
+  background: var(--primary-dark);
+}
+
+.btn.ghost {
+  background: #e8f7f0;
+  color: #257b59;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.top-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.notif-badge {
+  display: none;
+  margin-left: 6px;
+  min-width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 999px;
+  background: #16a34a;
+  color: #fff;
+  font-size: 0.75rem;
+  line-height: 1.3rem;
+  padding: 0 0.3rem;
+  font-weight: 700;
+}
+
+.notif-badge.show {
+  display: inline-block;
+}
+
+.profile-card {
+  position: relative;
+  background: var(--card);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 12px 30px rgba(20, 101, 72, 0.12);
+  transition: transform 0.22s ease, opacity 0.18s ease;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.profile-card.no-transition {
+  transition: none;
+}
+
+.profile-photo {
+  width: 100%;
+  height: 320px;
+  object-fit: cover;
+}
+
+.swipe-label {
+  position: absolute;
+  top: 18px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 700;
+  color: #fff;
+  z-index: 2;
+  opacity: 0;
+  transform: scale(0.95);
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+.swipe-like {
+  right: 18px;
+  background: rgba(27, 162, 98, 0.92);
+}
+
+.swipe-skip {
+  left: 18px;
+  background: rgba(48, 114, 90, 0.9);
+}
+
+.profile-card[data-swipe="right"] .swipe-like,
+.profile-card[data-swipe="left"] .swipe-skip {
+  opacity: var(--swipe-opacity, 0);
+  transform: scale(1);
+}
+
+.card-body {
+  padding: 18px;
+}
+
+.name-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.nickname,
+.grade {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.intro {
+  margin-top: 10px;
+  font-weight: 700;
+}
+
+.bio {
+  margin-top: 8px;
+  color: #34554a;
+}
+
+.tags {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag {
+  background: #e7f7ef;
+  color: #1f825b;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.88rem;
+}
+
+.actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 12px;
+}
+
+.actions .btn {
+  flex: 1;
+  font-weight: 700;
+}
+
+.skip {
+  background: var(--skip);
+  color: #295f4d;
+}
+
+.heart {
+  background: var(--heart);
+  color: #fff;
+}
+
+.feedback {
+  min-height: 1.5em;
+  margin-top: 10px;
+  color: #1f825b;
+  font-weight: 600;
+}
+
+.hearts-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.hearts-grid section,
+#notifications-screen {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: 0 10px 24px rgba(20, 101, 72, 0.1);
+}
+
+.heart-list,
+.inbox-list {
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  list-style: none;
+}
+
+.person-list-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f3fcf8;
+  border: 1px solid #d9f1e7;
+  border-radius: 12px;
+  padding: 8px 10px;
+}
+
+.person-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.person-name {
+  font-weight: 700;
+  color: #1f3a31;
+}
+
+.person-message {
+  margin-top: 2px;
+  font-size: 0.88rem;
+  color: #54766b;
+}
+
+.empty {
+  color: var(--muted);
+}
+
+.notification-toast {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%) translateY(140%);
+  background: #1f3a31;
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  z-index: 20;
+}
+
+.notification-toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}

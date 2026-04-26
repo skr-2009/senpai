@@ -1,0 +1,54 @@
+{
+  "currentUser": {
+    "id": "freshman-001",
+    "name": "田中 海",
+    "nickname": "かい",
+    "grade": "1年"
+  },
+  "students": [
+    {
+      "id": "senpai-001",
+      "name": "佐藤 葵",
+      "nickname": "あおい先輩",
+      "grade": "3年",
+      "bio": "UIデザインと写真が好き。課題の相談も歓迎です。",
+      "intro": "デザインの話ならぜひ！",
+      "hashtags": ["#デザイン", "#写真", "#カフェ巡り"],
+      "photo": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=900&q=80",
+      "receivedFrom": ["freshman-002", "freshman-004"]
+    },
+    {
+      "id": "senpai-002",
+      "name": "鈴木 陽太",
+      "nickname": "ようた先輩",
+      "grade": "4年",
+      "bio": "Web開発サークル所属。授業・インターン相談にのれます。",
+      "intro": "プログラミング好き集合！",
+      "hashtags": ["#プログラミング", "#Web開発", "#インターン"],
+      "photo": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=900&q=80",
+      "receivedFrom": ["freshman-003"]
+    },
+    {
+      "id": "senpai-003",
+      "name": "高橋 美月",
+      "nickname": "みづき先輩",
+      "grade": "2年",
+      "bio": "寮生活2年目。友達づくりのコツを共有します。",
+      "intro": "新生活の不安、気軽にどうぞ。",
+      "hashtags": ["#寮生活", "#学生生活", "#相談歓迎"],
+      "photo": "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=900&q=80",
+      "receivedFrom": ["freshman-001", "freshman-005"]
+    },
+    {
+      "id": "senpai-004",
+      "name": "中村 悠人",
+      "nickname": "ゆうと先輩",
+      "grade": "3年",
+      "bio": "ゲーム制作と音楽イベント運営をしています。",
+      "intro": "ゲームや音楽の話で盛り上がろう！",
+      "hashtags": ["#ゲーム", "#音楽", "#イベント"],
+      "photo": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=900&q=80",
+      "receivedFrom": []
+    }
+  ]
+}

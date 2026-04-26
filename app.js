@@ -1,11 +1,13 @@
 const screens = {
   home: document.getElementById("home-screen"),
   card: document.getElementById("card-screen"),
-  hearts: document.getElementById("hearts-screen")
+  hearts: document.getElementById("hearts-screen"),
+  notifications: document.getElementById("notifications-screen")
 };
 
 const startBtn = document.getElementById("start-btn");
 const notificationsBtn = document.getElementById("notifications-btn");
+const backFromNotificationsBtn = document.getElementById("back-from-notifications-btn");
 const notifBadge = document.getElementById("notif-badge");
 const showHeartsBtn = document.getElementById("show-hearts-btn");
 const backToCardsBtn = document.getElementById("back-to-cards-btn");
@@ -14,6 +16,7 @@ const skipBtn = document.getElementById("skip-btn");
 const profileCard = document.getElementById("profile-card");
 const sentHeartsList = document.getElementById("sent-hearts-list");
 const receivedHeartsList = document.getElementById("received-hearts-list");
+const inboxList = document.getElementById("inbox-list");
 const feedback = document.getElementById("feedback");
 const notificationToast = document.getElementById("notification-toast");
 
@@ -85,9 +88,7 @@ function updateNotificationState({ showToastOnIncrease = false } = {}) {
 }
 
 function markReceivedAsRead() {
-  getReceivedStudents().forEach((student) =>
-    readReceivedIds.add(student.id)
-  );
+  getReceivedStudents().forEach((student) => readReceivedIds.add(student.id));
   updateNotificationState();
 }
 
@@ -129,37 +130,26 @@ function renderCard() {
   profileCard.innerHTML = `
     <div class="swipe-label swipe-like">興味あり ❤</div>
     <div class="swipe-label swipe-skip">また今度</div>
-    <img class="profile-photo" src="${escapeHtml(student.photo)}" alt="${escapeHtml(student.name)}の写真" />
+    <img class="profile-photo" src="${escapeHtml(student.photo)}" />
     <div class="card-body">
-      <div class="name-row">
-        <h3>${escapeHtml(student.name)}</h3>
-        <span class="nickname">(${escapeHtml(student.nickname)})</span>
-        <span class="grade">${escapeHtml(student.grade)}</span>
-      </div>
-      <p class="intro">${escapeHtml(student.intro)}</p>
-      <p class="bio">${escapeHtml(student.bio)}</p>
-      <div class="tags">
-        ${student.hashtags.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}
-      </div>
+      <h3>${escapeHtml(student.name)}</h3>
+      <p>${escapeHtml(student.bio)}</p>
     </div>
   `;
 }
 
 function moveNextCard() {
-  currentIndex += 1;
+  currentIndex++;
   renderCard();
 }
 
-function sendHeart(student) {
-  if (sentHeartIds.has(student.id)) {
-    feedback.textContent = `${student.name}さんにはすでにハートを送っています`;
-    return false;
-  }
+function handleHeart() {
+  const student = students[currentIndex];
+  if (!student) return;
 
   sentHeartIds.add(student.id);
-  feedback.textContent = `ハートを送りました：${student.name}さんに興味を送りました`;
-  renderHeartLists();
-  return true;
+  feedback.textContent = `ハートを送りました`;
+  moveNextCard();
 }
 
 function handleSkip() {
@@ -167,86 +157,16 @@ function handleSkip() {
   moveNextCard();
 }
 
-function handleHeart() {
-  const student = students[currentIndex];
-  if (!student) return;
-
-  if (!sendHeart(student)) return;
-
-  moveNextCard();
-}
-
-function handleSwipeAction(direction) {
-  const student = students[currentIndex];
-  if (!student) return;
-
-  if (direction === "right") {
-    if (!sendHeart(student)) {
-      resetCardDragStyle(true);
-      return;
-    }
-  }
-
-  if (direction === "left") {
-    feedback.textContent = "また今度にしました";
-  }
-
-  profileCard.style.transform = `translateX(${direction === "right" ? 700 : -700}px)`;
-  profileCard.style.opacity = "0";
-
-  setTimeout(() => {
-    profileCard.style.opacity = "1";
-    moveNextCard();
-  }, 180);
-}
-
-function createListItems(listElement, items, formatter) {
-  listElement.innerHTML = "";
-  if (items.length === 0) {
-    const li = document.createElement("li");
-    li.className = "empty";
-    li.textContent = "まだありません";
-    listElement.appendChild(li);
-    return;
-  }
-
-  items.forEach(item => {
-    const li = document.createElement("li");
-    li.textContent = formatter(item);
-    listElement.appendChild(li);
-  });
-}
-
-function renderHeartLists() {
-  const sentStudents = students.filter(student => sentHeartIds.has(student.id));
-  createListItems(sentHeartsList, sentStudents, student => `${student.name} (${student.nickname})`);
-
-  createListItems(
-    receivedHeartsList,
-    getReceivedStudents(),
-    student => `${student.name}さんがあなたに興味を持っています`
-  );
-}
-
-async function init() {
-  const response = await fetch("./data/students.json");
-  const data = await response.json();
-  students = data.students;
-  currentUser = data.currentUser;
-
-  renderCard();
-  renderHeartLists();
-  updateNotificationState({ showToastOnIncrease: true });
-}
-
 startBtn.addEventListener("click", () => showScreen("card"));
-showHeartsBtn.addEventListener("click", () => {
-  renderHeartLists();
-  showScreen("hearts");
-  markReceivedAsRead();
-});
-backToCardsBtn.addEventListener("click", () => showScreen("card"));
 heartBtn.addEventListener("click", handleHeart);
 skipBtn.addEventListener("click", handleSkip);
 
 init();
+
+async function init() {
+  const res = await fetch("./data/students.json");
+  const data = await res.json();
+  students = data.students;
+  currentUser = data.currentUser;
+  renderCard();
+}

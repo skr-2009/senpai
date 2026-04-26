@@ -1,12 +1,12 @@
 :root {
-  --bg: #f7f8ff;
+  --bg: #f2fcf8;
   --card: #ffffff;
-  --text: #212338;
-  --muted: #6f7390;
-  --primary: #5f7bff;
-  --primary-dark: #4a66ea;
-  --heart: #ff5f8f;
-  --skip: #d9dce8;
+  --text: #1f3a31;
+  --muted: #608176;
+  --primary: #2eaf7d;
+  --primary-dark: #239469;
+  --heart: #2ec27e;
+  --skip: #d7ece4;
   --radius: 18px;
 }
 
@@ -18,12 +18,12 @@ body {
   margin: 0;
   font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
   color: var(--text);
-  background: radial-gradient(circle at top, #eef0ff 0%, var(--bg) 45%, #fefefe 100%);
+  background: radial-gradient(circle at top, #e8f8f1 0%, var(--bg) 45%, #fbfffd 100%);
   min-height: 100vh;
 }
 
 .app {
-  width: min(700px, 100%);
+  width: min(760px, 100%);
   margin: 0 auto;
   padding: 32px 16px 48px;
 }
@@ -48,7 +48,7 @@ p {
   padding: 52px 24px;
   border-radius: var(--radius);
   text-align: center;
-  box-shadow: 0 12px 30px rgba(48, 64, 140, 0.12);
+  box-shadow: 0 12px 30px rgba(20, 101, 72, 0.12);
 }
 
 .subtitle {
@@ -84,8 +84,8 @@ p {
 }
 
 .btn.ghost {
-  background: #eff2ff;
-  color: #4054bb;
+  background: #e8f7f0;
+  color: #257b59;
 }
 
 .top-bar {
@@ -109,7 +109,7 @@ p {
   min-width: 1.3rem;
   height: 1.3rem;
   border-radius: 999px;
-  background: #ff4a72;
+  background: #16a34a;
   color: #fff;
   font-size: 0.75rem;
   line-height: 1.3rem;
@@ -126,7 +126,7 @@ p {
   background: var(--card);
   border-radius: var(--radius);
   overflow: hidden;
-  box-shadow: 0 12px 30px rgba(48, 64, 140, 0.12);
+  box-shadow: 0 12px 30px rgba(20, 101, 72, 0.12);
   transition: transform 0.22s ease, opacity 0.18s ease;
   touch-action: pan-y;
   user-select: none;
@@ -157,12 +157,12 @@ p {
 
 .swipe-like {
   right: 18px;
-  background: rgba(255, 95, 143, 0.92);
+  background: rgba(27, 162, 98, 0.92);
 }
 
 .swipe-skip {
   left: 18px;
-  background: rgba(94, 109, 184, 0.9);
+  background: rgba(48, 114, 90, 0.9);
 }
 
 .profile-card[data-swipe="right"] .swipe-like,
@@ -195,7 +195,7 @@ p {
 
 .bio {
   margin-top: 8px;
-  color: #424764;
+  color: #34554a;
 }
 
 .tags {
@@ -206,8 +206,8 @@ p {
 }
 
 .tag {
-  background: #eef2ff;
-  color: #455dc4;
+  background: #e7f7ef;
+  color: #1f825b;
   border-radius: 999px;
   padding: 6px 10px;
   font-size: 0.88rem;
@@ -226,6 +226,7 @@ p {
 
 .skip {
   background: var(--skip);
+  color: #295f4d;
 }
 
 .heart {
@@ -236,7 +237,7 @@ p {
 .feedback {
   min-height: 1.5em;
   margin-top: 10px;
-  color: #3f4d95;
+  color: #1f825b;
   font-weight: 600;
 }
 
@@ -246,24 +247,54 @@ p {
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
-.hearts-grid section {
+.hearts-grid section,
+#notifications-screen {
   background: #fff;
   border-radius: var(--radius);
   padding: 16px;
-  box-shadow: 0 10px 24px rgba(48, 64, 140, 0.1);
+  box-shadow: 0 10px 24px rgba(20, 101, 72, 0.1);
 }
 
-.heart-list {
+.heart-list,
+.inbox-list {
   margin: 10px 0 0;
-  padding-left: 20px;
+  padding: 0;
   display: grid;
-  gap: 8px;
+  gap: 10px;
+  list-style: none;
+}
+
+.person-list-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f3fcf8;
+  border: 1px solid #d9f1e7;
+  border-radius: 12px;
+  padding: 8px 10px;
+}
+
+.person-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.person-name {
+  font-weight: 700;
+  color: #1f3a31;
+}
+
+.person-message {
+  margin-top: 2px;
+  font-size: 0.88rem;
+  color: #54766b;
 }
 
 .empty {
   color: var(--muted);
-  list-style: none;
-  margin-left: -20px;
 }
 
 .notification-toast {
@@ -271,7 +302,7 @@ p {
   bottom: 16px;
   left: 50%;
   transform: translateX(-50%) translateY(140%);
-  background: #232843;
+  background: #1f3a31;
   color: #fff;
   padding: 10px 14px;
   border-radius: 12px;

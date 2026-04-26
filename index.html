@@ -44,13 +44,21 @@
         <div class="hearts-grid">
           <section>
             <h3>自分が送ったハート</h3>
-            <ul id="sent-hearts-list" class="heart-list"></ul>
+            <ul id="sent-hearts-list" class="heart-list person-list"></ul>
           </section>
           <section>
             <h3>自分に届いたハート</h3>
-            <ul id="received-hearts-list" class="heart-list"></ul>
+            <ul id="received-hearts-list" class="heart-list person-list"></ul>
           </section>
         </div>
+      </section>
+
+      <section id="notifications-screen" class="screen">
+        <header class="top-bar">
+          <h2>受信メールボックス</h2>
+          <button id="back-from-notifications-btn" class="btn ghost">カードに戻る</button>
+        </header>
+        <ul id="inbox-list" class="inbox-list"></ul>
       </section>
     </main>
 

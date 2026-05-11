@@ -2,12 +2,15 @@ const screens = {
   home: document.getElementById("home-screen"),
   card: document.getElementById("card-screen"),
   hearts: document.getElementById("hearts-screen"),
-  notifications: document.getElementById("notifications-screen")
+  notifications: document.getElementById("notifications-screen"),
+  chat: document.getElementById("chat-screen")
 };
 
 const startBtn = document.getElementById("start-btn");
 const notificationsBtn = document.getElementById("notifications-btn");
+const showChatBtn = document.getElementById("show-chat-btn");
 const backFromNotificationsBtn = document.getElementById("back-from-notifications-btn");
+const backFromChatBtn = document.getElementById("back-from-chat-btn");
 const notifBadge = document.getElementById("notif-badge");
 const showHeartsBtn = document.getElementById("show-hearts-btn");
 const backToCardsBtn = document.getElementById("back-to-cards-btn");
@@ -17,6 +20,13 @@ const profileCard = document.getElementById("profile-card");
 const sentHeartsList = document.getElementById("sent-hearts-list");
 const receivedHeartsList = document.getElementById("received-hearts-list");
 const inboxList = document.getElementById("inbox-list");
+const chatCandidatesList = document.getElementById("chat-candidates-list");
+const chatScheduleList = document.getElementById("chat-schedule-list");
+const chatTargetTitle = document.getElementById("chat-target-title");
+const chatPlanForm = document.getElementById("chat-plan-form");
+const chatDateInput = document.getElementById("chat-date");
+const chatPlaceInput = document.getElementById("chat-place");
+const chatNoteInput = document.getElementById("chat-note");
 const feedback = document.getElementById("feedback");
 const notificationToast = document.getElementById("notification-toast");
 
@@ -28,8 +38,11 @@ let currentUser = null;
 let currentIndex = 0;
 let lastUnreadCount = 0;
 let toastTimerId;
+let selectedChatStudentId = null;
+
 const sentHeartIds = new Set();
 const readReceivedIds = new Set();
+const chatPlansByStudentId = new Map();
 
 const swipeState = {
   active: false,
@@ -58,10 +71,37 @@ function escapeHtml(text = "") {
 
 function getReceivedStudents() {
   if (!currentUser) return [];
-  return students.filter((student) =>
-    Array.isArray(student.receivedFrom) &&
-    student.receivedFrom.includes(currentUser.id)
+
+  return students.filter(
+    (student) =>
+      Array.isArray(student.receivedFrom) &&
+      student.receivedFrom.includes(currentUser.id)
   );
+}
+
+function getChatCandidates() {
+  const sentStudents = students.filter((student) => sentHeartIds.has(student.id));
+  const merged = [...sentStudents, ...getReceivedStudents()];
+
+  return merged.filter(
+    (student, index, array) =>
+      array.findIndex((target) => target.id === student.id) === index
+  );
+}
+
+function formatDateTime(localDateTime) {
+  if (!localDateTime) return "";
+
+  const date = new Date(localDateTime);
+  if (Number.isNaN(date.getTime())) return localDateTime;
+
+  return date.toLocaleString("ja-JP", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
 }
 
 function showToast(message) {
@@ -137,6 +177,7 @@ function renderCard() {
         <p class="bio">もう一度最初から見たい場合はページを更新してください。</p>
       </div>
     `;
+
     if (heartBtn) heartBtn.disabled = true;
     if (skipBtn) skipBtn.disabled = true;
     return;
@@ -178,8 +219,13 @@ function sendHeart(student) {
   }
 
   sentHeartIds.add(student.id);
-  if (feedback) feedback.textContent = `ハートを送りました：${student.name}さんに興味を送りました`;
+
+  if (feedback) {
+    feedback.textContent = `ハートを送りました：${student.name}さんに興味を送りました`;
+  }
+
   renderHeartLists();
+  renderChatScreen();
   return true;
 }
 
@@ -191,7 +237,6 @@ function handleSkip() {
 function handleHeart() {
   const student = students[currentIndex];
   if (!student) return;
-
   if (!sendHeart(student)) return;
 
   moveNextCard();
@@ -273,6 +318,7 @@ function createPersonListItems(listElement, items, formatter) {
   items.forEach((item) => {
     const li = document.createElement("li");
     li.className = "person-list-item";
+
     const hashtags = (Array.isArray(item.hashtags) ? item.hashtags : []).slice(0, 2);
 
     li.innerHTML = `
@@ -294,6 +340,130 @@ function renderInbox() {
     getReceivedStudents(),
     (student) => `${student.nickname}さんから興味が届いています`
   );
+}
+
+function renderChatCandidates() {
+  if (!chatCandidatesList) return;
+
+  const candidates = getChatCandidates();
+
+  if (!selectedChatStudentId && candidates[0]) {
+    selectedChatStudentId = candidates[0].id;
+  }
+
+  if (
+    selectedChatStudentId &&
+    !candidates.some((student) => student.id === selectedChatStudentId)
+  ) {
+    selectedChatStudentId = candidates[0]?.id ?? null;
+  }
+
+  chatCandidatesList.innerHTML = "";
+
+  if (candidates.length === 0) {
+    const li = document.createElement("li");
+    li.className = "empty";
+    li.textContent = "まだお話し候補はいません";
+    chatCandidatesList.appendChild(li);
+    return;
+  }
+
+  candidates.forEach((student) => {
+    const li = document.createElement("li");
+    li.className = `person-list-item candidate-item ${
+      selectedChatStudentId === student.id ? "selected" : ""
+    }`;
+
+    li.innerHTML = `
+      <img class="person-avatar" src="${escapeHtml(student.photo)}" alt="${escapeHtml(student.name)}のアイコン" />
+      <div class="person-content">
+        <p class="person-name">${escapeHtml(student.name)}</p>
+        <p class="person-message">${escapeHtml(student.nickname)} / ${escapeHtml(student.grade)}</p>
+      </div>
+    `;
+
+    li.addEventListener("click", () => {
+      selectedChatStudentId = student.id;
+      renderChatScreen();
+    });
+
+    chatCandidatesList.appendChild(li);
+  });
+}
+
+function renderScheduleList() {
+  if (!chatTargetTitle || !chatPlanForm || !chatScheduleList) return;
+
+  const selected = students.find((student) => student.id === selectedChatStudentId);
+
+  if (!selected) {
+    chatTargetTitle.textContent = "先輩を選んで予定を決めよう";
+    chatPlanForm.style.display = "none";
+    chatScheduleList.innerHTML = '<li class="empty">候補を選ぶと予定を登録できます</li>';
+    return;
+  }
+
+  chatTargetTitle.textContent = `${selected.name}さんとお話し予定を決める`;
+  chatPlanForm.style.display = "grid";
+
+  const plans = chatPlansByStudentId.get(selected.id) ?? [];
+  chatScheduleList.innerHTML = "";
+
+  if (plans.length === 0) {
+    chatScheduleList.innerHTML = '<li class="empty">まだ予定はありません</li>';
+    return;
+  }
+
+  plans.forEach((plan) => {
+    const li = document.createElement("li");
+    li.className = "person-list-item";
+
+    li.innerHTML = `
+      <div class="person-content">
+        <p class="person-name">${escapeHtml(formatDateTime(plan.dateTime))}</p>
+        <p class="person-message">場所：${escapeHtml(plan.place)}</p>
+        <p class="person-tags">メモ：${escapeHtml(plan.note || "（なし）")}</p>
+      </div>
+    `;
+
+    chatScheduleList.appendChild(li);
+  });
+}
+
+function renderChatScreen() {
+  renderChatCandidates();
+  renderScheduleList();
+}
+
+function handleChatPlanSubmit(event) {
+  event.preventDefault();
+
+  const selected = students.find((student) => student.id === selectedChatStudentId);
+
+  if (!selected) {
+    showToast("先に先輩を選んでください");
+    return;
+  }
+
+  const plan = {
+    dateTime: chatDateInput?.value || "",
+    place: chatPlaceInput?.value.trim() || "",
+    note: chatNoteInput?.value.trim() || ""
+  };
+
+  if (!plan.dateTime || !plan.place) {
+    showToast("日時と場所は必須です");
+    return;
+  }
+
+  const plans = chatPlansByStudentId.get(selected.id) ?? [];
+  plans.push(plan);
+  plans.sort((a, b) => a.dateTime.localeCompare(b.dateTime));
+  chatPlansByStudentId.set(selected.id, plans);
+
+  chatPlanForm.reset();
+  renderScheduleList();
+  showToast(`${selected.name}さんとの予定を保存しました`);
 }
 
 function renderHeartLists() {
@@ -321,9 +491,10 @@ async function refreshReceivedHearts() {
 
     const receivedById = new Set(
       data.students
-        .filter((student) =>
-          Array.isArray(student.receivedFrom) &&
-          student.receivedFrom.includes(currentUser.id)
+        .filter(
+          (student) =>
+            Array.isArray(student.receivedFrom) &&
+            student.receivedFrom.includes(currentUser.id)
         )
         .map((student) => student.id)
     );
@@ -342,6 +513,7 @@ async function refreshReceivedHearts() {
     });
 
     renderHeartLists();
+    renderChatScreen();
     updateNotificationState({ showToastOnIncrease: true });
   } catch {
     // 試作なので、読み込み失敗時は無視する
@@ -361,6 +533,7 @@ async function init() {
 
   renderCard();
   renderHeartLists();
+  renderChatScreen();
   updateNotificationState({ showToastOnIncrease: true });
   startReceivePolling();
 }
@@ -380,10 +553,17 @@ showHeartsBtn?.addEventListener("click", () => {
   markReceivedAsRead();
 });
 
+showChatBtn?.addEventListener("click", () => {
+  renderChatScreen();
+  showScreen("chat");
+});
+
 backToCardsBtn?.addEventListener("click", () => showScreen("card"));
 backFromNotificationsBtn?.addEventListener("click", () => showScreen("card"));
+backFromChatBtn?.addEventListener("click", () => showScreen("card"));
 heartBtn?.addEventListener("click", handleHeart);
 skipBtn?.addEventListener("click", handleSkip);
+chatPlanForm?.addEventListener("submit", handleChatPlanSubmit);
 
 profileCard?.addEventListener("pointerdown", onPointerDown);
 profileCard?.addEventListener("pointermove", onPointerMove);

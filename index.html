@@ -23,6 +23,7 @@
               <span id="notif-badge" class="notif-badge">0</span>
             </button>
             <button id="show-hearts-btn" class="btn ghost">ハート確認</button>
+            <button id="show-chat-btn" class="btn ghost">お話し予定</button>
           </div>
         </header>
 
@@ -59,6 +60,39 @@
           <button id="back-from-notifications-btn" class="btn ghost">カードに戻る</button>
         </header>
         <ul id="inbox-list" class="inbox-list"></ul>
+      </section>
+
+      <section id="chat-screen" class="screen">
+        <header class="top-bar">
+          <h2>お話し予定</h2>
+          <button id="back-from-chat-btn" class="btn ghost">カードに戻る</button>
+        </header>
+
+        <div class="chat-layout">
+          <aside>
+            <h3>お話し候補の先輩</h3>
+            <ul id="chat-candidates-list" class="heart-list person-list"></ul>
+          </aside>
+          <section class="chat-panel">
+            <h3 id="chat-target-title">先輩を選んで予定を決めよう</h3>
+            <form id="chat-plan-form" class="chat-form">
+              <label>
+                日時
+                <input id="chat-date" type="datetime-local" required />
+              </label>
+              <label>
+                場所
+                <input id="chat-place" type="text" maxlength="60" placeholder="例：図書館1Fラウンジ" required />
+              </label>
+              <label>
+                メッセージ
+                <textarea id="chat-note" rows="3" maxlength="180" placeholder="例：授業の相談をしたいです"></textarea>
+              </label>
+              <button class="btn primary" type="submit">予定を保存</button>
+            </form>
+            <ul id="chat-schedule-list" class="inbox-list"></ul>
+          </section>
+        </div>
       </section>
     </main>
 

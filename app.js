@@ -39,6 +39,7 @@ let currentIndex = 0;
 let lastUnreadCount = 0;
 let toastTimerId;
 let selectedChatStudentId = null;
+
 const sentHeartIds = new Set();
 const readReceivedIds = new Set();
 const chatPlansByStudentId = new Map();
@@ -50,12 +51,17 @@ const swipeState = {
 };
 
 function showScreen(screenName) {
-  Object.values(screens).forEach((screen) => screen.classList.remove("active"));
-  screens[screenName].classList.add("active");
+  Object.values(screens).forEach((screen) => {
+    if (screen) screen.classList.remove("active");
+  });
+
+  if (screens[screenName]) {
+    screens[screenName].classList.add("active");
+  }
 }
 
-function escapeHtml(text) {
-  return text
+function escapeHtml(text = "") {
+  return String(text)
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
@@ -64,27 +70,31 @@ function escapeHtml(text) {
 }
 
 function getReceivedStudents() {
-  if (!currentUser) {
-    return [];
-  }
-  return students.filter((student) => student.receivedFrom.includes(currentUser.id));
+  if (!currentUser) return [];
+
+  return students.filter(
+    (student) =>
+      Array.isArray(student.receivedFrom) &&
+      student.receivedFrom.includes(currentUser.id)
+  );
 }
 
 function getChatCandidates() {
-  const receivedIds = new Set(getReceivedStudents().map((student) => student.id));
   const sentStudents = students.filter((student) => sentHeartIds.has(student.id));
   const merged = [...sentStudents, ...getReceivedStudents()];
-  return merged.filter((student, index, array) => array.findIndex((target) => target.id === student.id) === index);
+
+  return merged.filter(
+    (student, index, array) =>
+      array.findIndex((target) => target.id === student.id) === index
+  );
 }
 
 function formatDateTime(localDateTime) {
-  if (!localDateTime) {
-    return "";
-  }
+  if (!localDateTime) return "";
+
   const date = new Date(localDateTime);
-  if (Number.isNaN(date.getTime())) {
-    return localDateTime;
-  }
+  if (Number.isNaN(date.getTime())) return localDateTime;
+
   return date.toLocaleString("ja-JP", {
     year: "numeric",
     month: "short",
@@ -95,9 +105,7 @@ function formatDateTime(localDateTime) {
 }
 
 function showToast(message) {
-  if (!message) {
-    return;
-  }
+  if (!message || !notificationToast) return;
 
   if (toastTimerId) {
     window.clearTimeout(toastTimerId);
@@ -112,15 +120,19 @@ function showToast(message) {
 }
 
 function updateNotificationState({ showToastOnIncrease = false } = {}) {
-  const unreadStudents = getReceivedStudents().filter((student) => !readReceivedIds.has(student.id));
+  const unreadStudents = getReceivedStudents().filter(
+    (student) => !readReceivedIds.has(student.id)
+  );
   const unreadCount = unreadStudents.length;
 
-  notifBadge.textContent = String(unreadCount);
-  notifBadge.classList.toggle("show", unreadCount > 0);
+  if (notifBadge) {
+    notifBadge.textContent = String(unreadCount);
+    notifBadge.classList.toggle("show", unreadCount > 0);
+  }
 
   if (showToastOnIncrease && unreadCount > lastUnreadCount) {
     const newest = unreadStudents[0];
-    showToast(`💌 ${newest.name}さんから興味が届きました`);
+    if (newest) showToast(`💌 ${newest.name}さんから興味が届きました`);
   }
 
   lastUnreadCount = unreadCount;
@@ -132,23 +144,22 @@ function markReceivedAsRead() {
 }
 
 function applyCardDragStyle(deltaX) {
+  if (!profileCard) return;
+
   const rotation = deltaX / 18;
   profileCard.style.transform = `translateX(${deltaX}px) rotate(${rotation}deg)`;
 
   const opacity = Math.min(Math.abs(deltaX) / SWIPE_THRESHOLD, 1);
-  if (deltaX > 0) {
-    profileCard.dataset.swipe = "right";
-  } else if (deltaX < 0) {
-    profileCard.dataset.swipe = "left";
-  } else {
-    profileCard.dataset.swipe = "none";
-  }
+  profileCard.dataset.swipe = deltaX > 0 ? "right" : deltaX < 0 ? "left" : "none";
   profileCard.style.setProperty("--swipe-opacity", opacity.toFixed(2));
 }
 
 function resetCardDragStyle(withTransition = true) {
+  if (!profileCard) return;
+
   profileCard.classList.toggle("no-transition", !withTransition);
   profileCard.style.transform = "";
+  profileCard.style.opacity = "1";
   profileCard.style.setProperty("--swipe-opacity", "0");
   profileCard.dataset.swipe = "none";
 }
@@ -157,6 +168,8 @@ function renderCard() {
   const student = students[currentIndex];
   resetCardDragStyle(false);
 
+  if (!profileCard) return;
+
   if (!student) {
     profileCard.innerHTML = `
       <div class="card-body">
@@ -164,13 +177,17 @@ function renderCard() {
         <p class="bio">もう一度最初から見たい場合はページを更新してください。</p>
       </div>
     `;
-    heartBtn.disabled = true;
-    skipBtn.disabled = true;
+
+    if (heartBtn) heartBtn.disabled = true;
+    if (skipBtn) skipBtn.disabled = true;
     return;
   }
 
-  heartBtn.disabled = false;
-  skipBtn.disabled = false;
+  if (heartBtn) heartBtn.disabled = false;
+  if (skipBtn) skipBtn.disabled = false;
+
+  const hashtags = Array.isArray(student.hashtags) ? student.hashtags : [];
+
   profileCard.innerHTML = `
     <div class="swipe-label swipe-like">興味あり ❤</div>
     <div class="swipe-label swipe-skip">また今度</div>
@@ -184,7 +201,7 @@ function renderCard() {
       <p class="intro">${escapeHtml(student.intro)}</p>
       <p class="bio">${escapeHtml(student.bio)}</p>
       <div class="tags">
-        ${(Array.isArray(student.hashtags) ? student.hashtags : []).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}
+        ${hashtags.map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}
       </div>
     </div>
   `;
@@ -197,40 +214,37 @@ function moveNextCard() {
 
 function sendHeart(student) {
   if (sentHeartIds.has(student.id)) {
-    feedback.textContent = `${student.name}さんにはすでにハートを送っています`;
+    if (feedback) feedback.textContent = `${student.name}さんにはすでにハートを送っています`;
     return false;
   }
 
   sentHeartIds.add(student.id);
-  feedback.textContent = `ハートを送りました：${student.name}さんに興味を送りました`;
+
+  if (feedback) {
+    feedback.textContent = `ハートを送りました：${student.name}さんに興味を送りました`;
+  }
+
   renderHeartLists();
   renderChatScreen();
   return true;
 }
 
 function handleSkip() {
-  feedback.textContent = "また今度にしました";
+  if (feedback) feedback.textContent = "また今度にしました";
   moveNextCard();
 }
 
 function handleHeart() {
   const student = students[currentIndex];
-  if (!student) {
-    return;
-  }
-
-  if (!sendHeart(student)) {
-    return;
-  }
+  if (!student) return;
+  if (!sendHeart(student)) return;
 
   moveNextCard();
 }
 
 function handleSwipeAction(direction) {
   const student = students[currentIndex];
-  if (!student) {
-    return;
-  }
+  if (!student || !profileCard) return;
 
   if (direction === "right") {
     if (!sendHeart(student)) {
@@ -239,7 +253,7 @@ function handleSwipeAction(direction) {
     }
   }
 
-  if (direction === "left") {
+  if (direction === "left" && feedback) {
     feedback.textContent = "また今度にしました";
   }
 
@@ -254,9 +268,7 @@ function handleSwipeAction(direction) {
 }
 
 function onPointerDown(event) {
-  if (!students[currentIndex]) {
-    return;
-  }
+  if (!students[currentIndex] || !profileCard) return;
 
   swipeState.active = true;
   swipeState.startX = event.clientX;
@@ -266,21 +278,18 @@ function onPointerDown(event) {
 }
 
 function onPointerMove(event) {
-  if (!swipeState.active) {
-    return;
-  }
+  if (!swipeState.active) return;
 
   swipeState.deltaX = event.clientX - swipeState.startX;
   applyCardDragStyle(swipeState.deltaX);
 }
 
 function onPointerEnd(event) {
-  if (!swipeState.active) {
-    return;
-  }
+  if (!swipeState.active || !profileCard) return;
 
   swipeState.active = false;
   profileCard.releasePointerCapture(event.pointerId);
+
   const deltaX = swipeState.deltaX;
   swipeState.deltaX = 0;
 
@@ -294,10 +303,10 @@ function onPointerEnd(event) {
 }
 
 function createPersonListItems(listElement, items, formatter) {
-  if (!listElement) {
-    return;
-  }
+  if (!listElement) return;
+
   listElement.innerHTML = "";
+
   if (items.length === 0) {
     const li = document.createElement("li");
     li.className = "empty";
@@ -309,7 +318,9 @@ function createPersonListItems(listElement, items, formatter) {
   items.forEach((item) => {
     const li = document.createElement("li");
     li.className = "person-list-item";
+
     const hashtags = (Array.isArray(item.hashtags) ? item.hashtags : []).slice(0, 2);
+
     li.innerHTML = `
       <img class="person-avatar" src="${escapeHtml(item.photo)}" alt="${escapeHtml(item.name)}のアイコン" />
       <div class="person-content">
@@ -318,24 +329,37 @@ function createPersonListItems(listElement, items, formatter) {
         <p class="person-tags">${hashtags.map((tag) => escapeHtml(tag)).join(" ")}</p>
       </div>
     `;
+
     listElement.appendChild(li);
   });
 }
 
 function renderInbox() {
-  createPersonListItems(inboxList, getReceivedStudents(), (student) => `${student.nickname}さんから興味が届いています`);
+  createPersonListItems(
+    inboxList,
+    getReceivedStudents(),
+    (student) => `${student.nickname}さんから興味が届いています`
+  );
 }
 
 function renderChatCandidates() {
+  if (!chatCandidatesList) return;
+
   const candidates = getChatCandidates();
+
   if (!selectedChatStudentId && candidates[0]) {
     selectedChatStudentId = candidates[0].id;
   }
-  if (selectedChatStudentId && !candidates.some((student) => student.id === selectedChatStudentId)) {
+
+  if (
+    selectedChatStudentId &&
+    !candidates.some((student) => student.id === selectedChatStudentId)
+  ) {
     selectedChatStudentId = candidates[0]?.id ?? null;
   }
 
   chatCandidatesList.innerHTML = "";
+
   if (candidates.length === 0) {
     const li = document.createElement("li");
     li.className = "empty";
@@ -346,7 +370,10 @@ function renderChatCandidates() {
 
   candidates.forEach((student) => {
     const li = document.createElement("li");
-    li.className = `person-list-item candidate-item ${selectedChatStudentId === student.id ? "selected" : ""}`;
+    li.className = `person-list-item candidate-item ${
+      selectedChatStudentId === student.id ? "selected" : ""
+    }`;
+
     li.innerHTML = `
       <img class="person-avatar" src="${escapeHtml(student.photo)}" alt="${escapeHtml(student.name)}のアイコン" />
       <div class="person-content">
@@ -354,16 +381,21 @@ function renderChatCandidates() {
         <p class="person-message">${escapeHtml(student.nickname)} / ${escapeHtml(student.grade)}</p>
       </div>
     `;
+
     li.addEventListener("click", () => {
       selectedChatStudentId = student.id;
       renderChatScreen();
     });
+
     chatCandidatesList.appendChild(li);
   });
 }
 
 function renderScheduleList() {
+  if (!chatTargetTitle || !chatPlanForm || !chatScheduleList) return;
+
   const selected = students.find((student) => student.id === selectedChatStudentId);
+
   if (!selected) {
     chatTargetTitle.textContent = "先輩を選んで予定を決めよう";
     chatPlanForm.style.display = "none";
@@ -376,6 +408,7 @@ function renderScheduleList() {
 
   const plans = chatPlansByStudentId.get(selected.id) ?? [];
   chatScheduleList.innerHTML = "";
+
   if (plans.length === 0) {
     chatScheduleList.innerHTML = '<li class="empty">まだ予定はありません</li>';
     return;
@@ -384,6 +417,7 @@ function renderScheduleList() {
   plans.forEach((plan) => {
     const li = document.createElement("li");
     li.className = "person-list-item";
+
     li.innerHTML = `
       <div class="person-content">
         <p class="person-name">${escapeHtml(formatDateTime(plan.dateTime))}</p>
@@ -391,6 +425,7 @@ function renderScheduleList() {
         <p class="person-tags">メモ：${escapeHtml(plan.note || "（なし）")}</p>
       </div>
     `;
+
     chatScheduleList.appendChild(li);
   });
 }
@@ -402,16 +437,18 @@ function renderChatScreen() {
 
 function handleChatPlanSubmit(event) {
   event.preventDefault();
+
   const selected = students.find((student) => student.id === selectedChatStudentId);
+
   if (!selected) {
     showToast("先に先輩を選んでください");
     return;
   }
 
   const plan = {
-    dateTime: chatDateInput.value,
-    place: chatPlaceInput.value.trim(),
-    note: chatNoteInput.value.trim()
+    dateTime: chatDateInput?.value || "",
+    place: chatPlaceInput?.value.trim() || "",
+    note: chatNoteInput?.value.trim() || ""
   };
 
   if (!plan.dateTime || !plan.place) {
@@ -431,7 +468,12 @@ function handleChatPlanSubmit(event) {
 
 function renderHeartLists() {
   const sentStudents = students.filter((student) => sentHeartIds.has(student.id));
-  createPersonListItems(sentHeartsList, sentStudents, (student) => `${student.nickname}さんにハートを送りました`);
+
+  createPersonListItems(
+    sentHeartsList,
+    sentStudents,
+    (student) => `${student.nickname}さんにハートを送りました`
+  );
 
   createPersonListItems(
     receivedHeartsList,
@@ -446,19 +488,27 @@ async function refreshReceivedHearts() {
   try {
     const response = await fetch(`./data/students.json?ts=${Date.now()}`);
     const data = await response.json();
+
     const receivedById = new Set(
       data.students
-        .filter((student) => student.receivedFrom.includes(currentUser.id))
+        .filter(
+          (student) =>
+            Array.isArray(student.receivedFrom) &&
+            student.receivedFrom.includes(currentUser.id)
+        )
         .map((student) => student.id)
     );
 
     students = students.map((student) => {
-      if (receivedById.has(student.id) && !student.receivedFrom.includes(currentUser.id)) {
+      const receivedFrom = Array.isArray(student.receivedFrom) ? student.receivedFrom : [];
+
+      if (receivedById.has(student.id) && !receivedFrom.includes(currentUser.id)) {
         return {
           ...student,
-          receivedFrom: [...student.receivedFrom, currentUser.id]
+          receivedFrom: [...receivedFrom, currentUser.id]
         };
       }
+
       return student;
     });
 
@@ -466,7 +516,7 @@ async function refreshReceivedHearts() {
     renderChatScreen();
     updateNotificationState({ showToastOnIncrease: true });
   } catch {
-    // polling failure is ignored intentionally in this prototype
+    // 試作なので、読み込み失敗時は無視する
   }
 }
 
@@ -477,8 +527,9 @@ function startReceivePolling() {
 async function init() {
   const response = await fetch("./data/students.json");
   const data = await response.json();
-  students = data.students;
-  currentUser = data.currentUser;
+
+  students = Array.isArray(data.students) ? data.students : [];
+  currentUser = data.currentUser || null;
 
   renderCard();
   renderHeartLists();
@@ -488,21 +539,25 @@ async function init() {
 }
 
 startBtn?.addEventListener("click", () => showScreen("card"));
+
 notificationsBtn?.addEventListener("click", () => {
   renderHeartLists();
   renderInbox();
   showScreen("notifications");
   markReceivedAsRead();
 });
+
 showHeartsBtn?.addEventListener("click", () => {
   renderHeartLists();
   showScreen("hearts");
   markReceivedAsRead();
 });
+
 showChatBtn?.addEventListener("click", () => {
   renderChatScreen();
   showScreen("chat");
 });
+
 backToCardsBtn?.addEventListener("click", () => showScreen("card"));
 backFromNotificationsBtn?.addEventListener("click", () => showScreen("card"));
 backFromChatBtn?.addEventListener("click", () => showScreen("card"));
@@ -516,6 +571,8 @@ profileCard?.addEventListener("pointerup", onPointerEnd);
 profileCard?.addEventListener("pointercancel", onPointerEnd);
 
 init().catch((error) => {
+  if (!profileCard) return;
+
   profileCard.innerHTML = `
     <div class="card-body">
       <h3>データ読み込みエラー</h3>

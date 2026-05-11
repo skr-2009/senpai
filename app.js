@@ -104,6 +104,13 @@ function formatDateTime(localDateTime) {
   });
 }
 
+function getPlanStatusLabel(status) {
+  if (status === "accepted") return "先輩がOKしました";
+  if (status === "rejected") return "先輩から再調整の提案あり";
+  if (status === "proposed") return "確認依頼を送信済み";
+  return "下書き";
+}
+
 function showToast(message) {
   if (!message || !notificationToast) return;
 
@@ -318,7 +325,6 @@ function createPersonListItems(listElement, items, formatter) {
   items.forEach((item) => {
     const li = document.createElement("li");
     li.className = "person-list-item";
-
     const hashtags = (Array.isArray(item.hashtags) ? item.hashtags : []).slice(0, 2);
 
     li.innerHTML = `
@@ -416,15 +422,32 @@ function renderScheduleList() {
 
   plans.forEach((plan) => {
     const li = document.createElement("li");
-    li.className = "person-list-item";
+    li.className = "person-list-item schedule-item";
 
     li.innerHTML = `
       <div class="person-content">
         <p class="person-name">${escapeHtml(formatDateTime(plan.dateTime))}</p>
         <p class="person-message">場所：${escapeHtml(plan.place)}</p>
         <p class="person-tags">メモ：${escapeHtml(plan.note || "（なし）")}</p>
+        <p class="plan-status">状態：${escapeHtml(getPlanStatusLabel(plan.status))}</p>
+      </div>
+      <div class="plan-actions">
+        <button class="btn ghost mini-btn" type="button" data-action="accept">OK</button>
+        <button class="btn ghost mini-btn" type="button" data-action="reject">別日提案</button>
       </div>
     `;
+
+    li.querySelector('[data-action="accept"]')?.addEventListener("click", () => {
+      plan.status = "accepted";
+      renderScheduleList();
+      showToast("先輩が予定をOKしました");
+    });
+
+    li.querySelector('[data-action="reject"]')?.addEventListener("click", () => {
+      plan.status = "rejected";
+      renderScheduleList();
+      showToast("先輩から再調整リクエストが届きました");
+    });
 
     chatScheduleList.appendChild(li);
   });
@@ -446,9 +469,11 @@ function handleChatPlanSubmit(event) {
   }
 
   const plan = {
+    id: `${selected.id}-${Date.now()}`,
     dateTime: chatDateInput?.value || "",
     place: chatPlaceInput?.value.trim() || "",
-    note: chatNoteInput?.value.trim() || ""
+    note: chatNoteInput?.value.trim() || "",
+    status: "proposed"
   };
 
   if (!plan.dateTime || !plan.place) {
@@ -461,9 +486,9 @@ function handleChatPlanSubmit(event) {
   plans.sort((a, b) => a.dateTime.localeCompare(b.dateTime));
   chatPlansByStudentId.set(selected.id, plans);
 
-  chatPlanForm.reset();
+  chatPlanForm?.reset();
   renderScheduleList();
-  showToast(`${selected.name}さんとの予定を保存しました`);
+  showToast(`${selected.name}さんに確認依頼を送りました`);
 }
 
 function renderHeartLists() {
@@ -488,12 +513,14 @@ async function refreshReceivedHearts() {
   try {
     const response = await fetch(`./data/students.json?ts=${Date.now()}`);
     const data = await response.json();
+    const loadedStudents = Array.isArray(data.students) ? data.students : [];
 
     const receivedById = new Set(
-      data.students
+      loadedStudents
         .filter(
           (student) =>
             Array.isArray(student.receivedFrom) &&
+            currentUser &&
             student.receivedFrom.includes(currentUser.id)
         )
         .map((student) => student.id)
@@ -502,7 +529,7 @@ async function refreshReceivedHearts() {
     students = students.map((student) => {
       const receivedFrom = Array.isArray(student.receivedFrom) ? student.receivedFrom : [];
 
-      if (receivedById.has(student.id) && !receivedFrom.includes(currentUser.id)) {
+      if (currentUser && receivedById.has(student.id) && !receivedFrom.includes(currentUser.id)) {
         return {
           ...student,
           receivedFrom: [...receivedFrom, currentUser.id]

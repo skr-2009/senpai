@@ -278,6 +278,19 @@ h1, h2, h3, p {
   object-fit: cover;
 }
 
+.chat-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(0, 1.6fr);
+  gap: 16px;
+}
+
+.chat-layout aside,
+.chat-panel {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
 .notification-toast {
   position: fixed;
   bottom: 16px;

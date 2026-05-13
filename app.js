@@ -22,6 +22,7 @@ const receivedHeartsList = document.getElementById("received-hearts-list");
 const inboxList = document.getElementById("inbox-list");
 const chatCandidatesList = document.getElementById("chat-candidates-list");
 const chatScheduleList = document.getElementById("chat-schedule-list");
+const availabilityList = document.getElementById("availability-list");
 const chatTargetTitle = document.getElementById("chat-target-title");
 const chatPlanForm = document.getElementById("chat-plan-form");
 const chatDateInput = document.getElementById("chat-date");
@@ -80,13 +81,7 @@ function getReceivedStudents() {
 }
 
 function getChatCandidates() {
-  const sentStudents = students.filter((student) => sentHeartIds.has(student.id));
-  const merged = [...sentStudents, ...getReceivedStudents()];
-
-  return merged.filter(
-    (student, index, array) =>
-      array.findIndex((target) => target.id === student.id) === index
-  );
+  return [...students];
 }
 
 function formatDateTime(localDateTime) {
@@ -114,9 +109,7 @@ function getPlanStatusLabel(status) {
 function showToast(message) {
   if (!message || !notificationToast) return;
 
-  if (toastTimerId) {
-    window.clearTimeout(toastTimerId);
-  }
+  if (toastTimerId) window.clearTimeout(toastTimerId);
 
   notificationToast.textContent = message;
   notificationToast.classList.add("show");
@@ -184,7 +177,6 @@ function renderCard() {
         <p class="bio">もう一度最初から見たい場合はページを更新してください。</p>
       </div>
     `;
-
     if (heartBtn) heartBtn.disabled = true;
     if (skipBtn) skipBtn.disabled = true;
     return;
@@ -376,6 +368,10 @@ function renderChatCandidates() {
 
   candidates.forEach((student) => {
     const li = document.createElement("li");
+    const isConnected =
+      sentHeartIds.has(student.id) ||
+      getReceivedStudents().some((s) => s.id === student.id);
+
     li.className = `person-list-item candidate-item ${
       selectedChatStudentId === student.id ? "selected" : ""
     }`;
@@ -384,7 +380,9 @@ function renderChatCandidates() {
       <img class="person-avatar" src="${escapeHtml(student.photo)}" alt="${escapeHtml(student.name)}のアイコン" />
       <div class="person-content">
         <p class="person-name">${escapeHtml(student.name)}</p>
-        <p class="person-message">${escapeHtml(student.nickname)} / ${escapeHtml(student.grade)}</p>
+        <p class="person-message">${escapeHtml(student.nickname)} / ${escapeHtml(student.grade)} / ${
+          isConnected ? "ハートでつながり中" : "プロフィールから相談OK"
+        }</p>
       </div>
     `;
 
@@ -397,6 +395,31 @@ function renderChatCandidates() {
   });
 }
 
+function renderAvailabilityList(selected) {
+  if (!availabilityList) return;
+
+  availabilityList.innerHTML = "";
+
+  if (!selected) {
+    availabilityList.innerHTML = '<li class="empty">先輩を選ぶと空き時間が表示されます</li>';
+    return;
+  }
+
+  const slots = Array.isArray(selected.availableSlots) ? selected.availableSlots : [];
+
+  if (slots.length === 0) {
+    availabilityList.innerHTML = '<li class="empty">登録されている空き時間はありません</li>';
+    return;
+  }
+
+  slots.forEach((slot) => {
+    const li = document.createElement("li");
+    li.className = "person-list-item";
+    li.innerHTML = `<div class="person-content"><p class="person-message">${escapeHtml(slot)}</p></div>`;
+    availabilityList.appendChild(li);
+  });
+}
+
 function renderScheduleList() {
   if (!chatTargetTitle || !chatPlanForm || !chatScheduleList) return;
 
@@ -404,12 +427,14 @@ function renderScheduleList() {
 
   if (!selected) {
     chatTargetTitle.textContent = "先輩を選んで予定を決めよう";
+    renderAvailabilityList(null);
     chatPlanForm.style.display = "none";
     chatScheduleList.innerHTML = '<li class="empty">候補を選ぶと予定を登録できます</li>';
     return;
   }
 
   chatTargetTitle.textContent = `${selected.name}さんとお話し予定を決める`;
+  renderAvailabilityList(selected);
   chatPlanForm.style.display = "grid";
 
   const plans = chatPlansByStudentId.get(selected.id) ?? [];
